@@ -12,7 +12,7 @@ CORS(app, resources={r"/*": {"origins": ["http://dev.vipcourier_v2.com","https:/
 
 @app.route('/')
 def index():
-    return "¡Bienvenido a VIP Courier!"
+    return "¡Bienvenido al backend de VIP Courier!"
 
 @app.route('/verificarSesion', methods=['GET'])
 def token():
