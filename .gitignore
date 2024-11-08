@@ -7,8 +7,5 @@ __pycache__/
 venv/
 .venv/
 
-<<<<<<< HEAD
 # Ignorar archivo socket
 vip_courier_backend.sock
-=======
->>>>>>> 8757a1bb0b695e688b1218da5bde82d278691b27
