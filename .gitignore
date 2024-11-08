@@ -1,0 +1,11 @@
+# Ignorar archivos Python generados
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorar entorno virtual
+venv/
+.venv/
+
+# Ignorar archivo socket
+vip_courier_backend.sock
