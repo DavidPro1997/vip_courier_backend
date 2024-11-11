@@ -9,3 +9,5 @@ venv/
 
 # Ignorar archivo socket
 vip_courier_backend.sock
+
+app/config.py
