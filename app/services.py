@@ -15,8 +15,11 @@ class ObtenerUsuario:
             validacionToken = ObtenerUsuario.verificarToken(auth)
             if validacionToken["estado"] == True:
                 usuario = Usuario.obtener_usuario(validacionToken["datos"]["id"])
-                imagen = Imagen.convertir_imagen_a_base64(usuario["imagen"])
-                usuario["imgBase64"] = imagen
+                if usuario["imagen"] is not None:
+                    imagen = Imagen.convertir_imagen_a_base64(usuario["imagen"])
+                    usuario["imgBase64"] = imagen
+                else : 
+                    usuario["imgBase64"] = None
                 return {"estado":True, "mensaje": "Se ha encontrado usuario", "datos": usuario}
             else:
                 return {"estado":False, "mensaje": "No tiene autorización"}
