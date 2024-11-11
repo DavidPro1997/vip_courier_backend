@@ -1,3 +1,6 @@
+#archivo de configuracion
+# app/config.py
+
 # Ignorar archivos Python generados
 __pycache__/
 *.pyc
@@ -10,4 +13,4 @@ venv/
 # Ignorar archivo socket
 vip_courier_backend.sock
 
-app/config.py
+
