@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from app.services import ObtenerUsuario, Direccion, Paquete
+from app.services import Usuario, Direccion, Paquete, Correo
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -14,50 +14,77 @@ CORS(app, resources={r"/*": {"origins": ["http://dev.vipcourier_v2.com","https:/
 def index():
     return "¡Bienvenido al backend de VIP Courier!"
 
+
+######################################### CORREO ###########################################
+@app.route('/enviarCorreoVerificacion', methods=['POST'])
+def enviarCorreo():
+    data = request.json
+    respuesta = Correo.verificar_correo(data)
+    return jsonify(respuesta)
+
+
+
+########################################## SESION ###########################################
+
 @app.route('/verificarSesion', methods=['GET'])
 def token():
     auth_header = request.headers.get('Authorization')
-    respuesta = ObtenerUsuario.verificarToken(auth_header)
+    respuesta = Usuario.verificarToken(auth_header)
     return jsonify(respuesta)
 
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
-    respuesta = ObtenerUsuario.iniciarSesion(data.get('correo'), data.get('password'))
+    respuesta = Usuario.iniciarSesion(data.get('correo'), data.get('password'))
     return jsonify(respuesta)
+
+
+######################################### USUARIOS ###################################
+
 
 @app.route('/registrarUsuario', methods=['POST'])
 def registrarUsuario():
     data = request.json
-    respuesta = ObtenerUsuario.anadir(data)
+    respuesta = Usuario.anadir(data)
     return jsonify(respuesta)
 
 @app.route('/datosPersonales', methods=['GET'])
 def datos():
     auth_header = request.headers.get('Authorization')
-    respuesta = ObtenerUsuario.datosPersonales(auth_header)
+    respuesta = Usuario.datosPersonales(auth_header)
     return jsonify(respuesta)
 
 @app.route('/editarFotografia', methods=['POST'])
 def editarFoto():
     auth_header = request.headers.get('Authorization')
     data = request.json
-    respuesta = ObtenerUsuario.editarFotografia(auth_header, data)
+    respuesta = Usuario.editarFotografia(auth_header, data)
     return jsonify(respuesta)
 
 @app.route('/editarDatosPersonales', methods=['POST'])
 def editarDatos():
     auth_header = request.headers.get('Authorization')
     data = request.json
-    respuesta = ObtenerUsuario.editarDatosPersonales(auth_header, data)
+    respuesta = Usuario.editarDatosPersonales(auth_header, data)
     return jsonify(respuesta)
 
 @app.route('/editarPassword', methods=['POST'])
 def editarPassword():
     auth_header = request.headers.get('Authorization')
     data = request.json
-    respuesta = ObtenerUsuario.editarPassword(auth_header, data)
+    respuesta = Usuario.editarPassword(auth_header, data)
     return jsonify(respuesta)
+
+
+@app.route('/restablecerPassword', methods=['POST'])
+def restablecerPassword():
+    data = request.json
+    respuesta = Usuario.restablecerPassword(data["correo"])
+    return jsonify(respuesta)
+
+
+##################################### DIRECCIONES #######################################
+
 
 @app.route('/agregarDireccion', methods=['POST'])
 def addDireccion():
@@ -110,11 +137,26 @@ def verPaquetes():
     respuesta = Paquete.obtenerPaquetes(auth_header)
     return jsonify(respuesta)
 
+@app.route('/obtenerPaquetesCompletos', methods=['POST'])
+def verPaquetes_completo():
+    auth_header = request.headers.get('Authorization')
+    data = request.json
+    respuesta = Paquete.obtenerPaquetes_completos(auth_header, data["buscador"])
+    return jsonify(respuesta)
+
 @app.route('/validarTracking/<int:tracking>', methods=['GET'])
 def validarTracking(tracking):
     auth_header = request.headers.get('Authorization')
     respuesta = Paquete.validar_tracking(auth_header, tracking)
     return jsonify(respuesta)
+
+@app.route('/descargarVoucherTracking/<int:idTracking>', methods=['GET'])
+def descargarVoucher(idTracking):
+    auth_header = request.headers.get('Authorization')
+    respuesta = Paquete.descargar_tracking(auth_header, idTracking)
+    return jsonify(respuesta)
+
+
 
 
 
@@ -125,7 +167,7 @@ def validarTracking(tracking):
 @app.route('/ejemploTOken', methods=['GET'])
 def token5():
     auth_header = request.headers.get('Authorization')
-    respuesta = ObtenerUsuario.obtenerToken(auth_header)
+    respuesta = Usuario.obtenerToken(auth_header)
     return jsonify(respuesta)
 
 
@@ -136,5 +178,5 @@ def token5():
 def ejmeplo():
     data = request.json
     auth_header = request.headers.get('Authorization')
-    respuesta = ObtenerUsuario.verificarSesion(data.get('correo'), data.get('password'), auth_header)
+    respuesta = Usuario.verificarSesion(data.get('correo'), data.get('password'), auth_header)
     return jsonify(respuesta)

@@ -1,6 +1,7 @@
 import mysql.connector
 from app.config import Config 
 
+
 class Database:
     def __init__(self):
         self.connection = mysql.connector.connect(
@@ -15,7 +16,7 @@ class Database:
         self.cursor.close()
         self.connection.close()
 
-class Usuario:
+class UsuarioBase:
 
     @classmethod
     def usuario_login(cls, correo, password):
@@ -27,39 +28,42 @@ class Usuario:
         if resultado:
             return {
                 "id": resultado[0],         # Ajusta el índice según la estructura de tu tabla
-                "nombre": resultado[1],     # Ajusta el índice según la estructura de tu tabla
-                "apellido": resultado[2],   # Ajusta el índice según la estructura de tu tabla
-                "correo": resultado[3],     # Ajusta el índice según la estructura de tu tabla
-                "rol": resultado[5],        # Ajusta el índice según la estructura de tu tabla
+                "primerNombre": resultado[2],     # Ajusta el índice según la estructura de tu tabla
+                "primerApellido": resultado[4],   # Ajusta el índice según la estructura de tu tabla
+                "correo": resultado[6],     # Ajusta el índice según la estructura de tu tabla
+                "rol": resultado[8],        # Ajusta el índice según la estructura de tu tabla
             }
         return None
     
     @classmethod
     def obtener_usuario(cls, id):
         db = Database()
-        query = "SELECT * FROM datos_usuario WHERE id = %s"
+        query = "SELECT * FROM usuarios WHERE id = %s"
         db.cursor.execute(query, (id,))
         resultado = db.cursor.fetchone()
         db.close()
         if resultado:
             return {
-                "id": resultado[0],         # Ajusta el índice según la estructura de tu tabla
-                "nombre": resultado[1],     # Ajusta el índice según la estructura de tu tabla
-                "apellido": resultado[2],   # Ajusta el índice según la estructura de tu tabla
-                "correo": resultado[3],     # Ajusta el índice según la estructura de tu tabla
-                "rol": resultado[4],        # Ajusta el índice según la estructura de tu tabla
-                "telefono": resultado[5],      
-                "imagen": resultado[6],        
+                "id": resultado[0], 
+                "cedula": resultado[1],         
+                "primerNombre": resultado[2],     # Ajusta el índice según la estructura de tu tabla
+                "segundoNombre": resultado[3],     # Ajusta el índice según la estructura de tu tabla
+                "primerApellido": resultado[4],   # Ajusta el índice según la estructura de tu tabla
+                "segundoApellido": resultado[5],   # Ajusta el índice según la estructura de tu tabla
+                "correo": resultado[6],     # Ajusta el índice según la estructura de tu tabla
+                "rol": resultado[8],        # Ajusta el índice según la estructura de tu tabla
+                "telefono": resultado[9],      
+                "imagen": resultado[10],        
             }
         return None
     
 
     @classmethod
-    def editar_usuario(cls, id, nombres, apellidos, telefono):
+    def editar_usuario(cls, id, telefono):
         db = Database()
-        query = "UPDATE usuarios SET nombre = %s, apellido = %s,telefono = %s WHERE id = %s"
+        query = "UPDATE usuarios SET telefono = %s WHERE id = %s"
         try:
-            db.cursor.execute(query, (nombres,apellidos,telefono,id))
+            db.cursor.execute(query, (telefono,id))
             db.connection.commit()  # Confirma la transacción
             resultado = {"estado":True, "mensaje": "Datos actualizados correctamente"}
         except Exception as e:
@@ -95,7 +99,7 @@ class Usuario:
             return {
                 "password": resultado[0]        # Ajusta el índice según la estructura de tu tabla
             }
-        return None
+        return {"password": None}
 
 
     
@@ -123,26 +127,71 @@ class Usuario:
         try:
             cursor.execute(query, (correo,))
             resultado = cursor.fetchone()  # Obtiene un solo resultado
-            return resultado is not None  # Retorna True si hay un resultado
+            return resultado 
         finally:
             cursor.close()  # Cierra el cursor aquí
             db.close()  # Cierra la conexión aquí
     
 
     @classmethod
-    def insertar_usuario(cls, nombre, apellido, correo, password):
+    def insertar_usuario(cls, data, password):
         db = Database()
-        query = "INSERT INTO usuarios (nombre, apellido, correo, password, rol_id) VALUES (%s, %s,%s, %s,2)"
+        query = """
+                INSERT INTO usuarios (cedula, primerNombre,segundoNombre, primerApellido, segundoApellido ,correo, password, rol_id, telefono) 
+                VALUES (%s, %s,%s, %s, %s, %s, %s,2, %s)
+                """
         try:
-            db.cursor.execute(query, (nombre,apellido,correo,password))
+            db.cursor.execute(query, (data["cedula"],data["primerNombre"],data["segundoNombre"],data["primerApellido"],data["segundoApellido"],data["correo"],password,data["telefono"]))
             db.connection.commit()  # Confirma la transacción
             resultado = {"estado":True, "mensaje": "Usuario insertado correctamente"}
         except Exception as e:
             db.connection.rollback()  # Revertir si hay un error
-            resultado = {"estado":False, "mensaje": "Hubo un error al insertar"}
+            resultado = {"estado":False, "mensaje": f"Hubo un error al insertar {e}"}
         finally:
             db.close()
             return resultado
+        
+
+    @classmethod
+    def insertar_codigo_temporal(cls, correo, codigo):
+        db = Database()
+        query = "INSERT INTO codigos (correo, codigo) VALUES (%s, %s)"
+        try:
+            db.cursor.execute(query, (correo,codigo))
+            db.connection.commit()  # Confirma la transacción
+            resultado = True
+        except Exception as e:
+            db.connection.rollback()  # Revertir si hay un error
+            resultado = False
+        finally:
+            db.close()
+            return resultado
+        
+    
+    @classmethod
+    def verificar_codigo_temporal(cls, correo, codigo):
+        db = Database()  # Crea una instancia de la clase Database
+        query = """
+                select * from codigos
+                where correo = %s and codigo = %s
+                LIMIT 1
+                """  
+        cursor = db.connection.cursor()
+        try:
+            cursor.execute(query, (correo,codigo))
+            resultado = cursor.fetchone()  # Obtiene un solo resultado
+            if resultado:
+                # Crear un diccionario con los nombres de las columnas como claves
+                columnas = [desc[0] for desc in cursor.description]
+                resultado_dict = dict(zip(columnas, resultado))
+                return resultado_dict
+            else:
+                return None  # Si no hay resultado, retorna None
+        finally:
+            cursor.close()  # Cierra el cursor aquí
+            db.close()  # Cierra la conexión aquí
+
+    
         
     @classmethod
     def insertar_imagen(cls, id, ruta):
@@ -159,7 +208,7 @@ class Usuario:
             db.close()
             return resultado
 
-class Direcciones:
+class DireccionesBase:
     @classmethod
     def insertar_direccion(cls, id,datos):
         db = Database()
@@ -320,7 +369,7 @@ class Direcciones:
             }
         return None
 
-class Tracking:
+class TrackingBase:
     @classmethod
     def insertar_tracking(cls, tracking, idUsuario, precio, pagado,ruta, direccion):
         db = Database()
@@ -328,10 +377,10 @@ class Tracking:
         try:
             db.cursor.execute(query, (tracking,idUsuario,precio,pagado, ruta, direccion))
             db.connection.commit()  # Confirma la transacción
-            resultado = {"estado":True, "mensaje": "Tracking insertado correctamente"}
+            resultado = True
         except Exception as e:
             db.connection.rollback()  # Revertir si hay un error
-            resultado = {"estado":False, "mensaje": "Hubo un error al insertar datos"}
+            resultado = False
         finally:
             db.close()
             return resultado
@@ -352,8 +401,12 @@ class Tracking:
     @classmethod
     def obtener_trackings(cls, idUsuario):
         db = Database()
-        query = "SELECT * FROM vista_trackings WHERE usuario_id = %s"
-        db.cursor.execute(query, (idUsuario,))
+        query = "SELECT * FROM vista_trackings"
+        params = []
+        if idUsuario:  # Si idUsuario tiene un valor
+            query += " WHERE usuario_id = %s"
+            params.append(idUsuario)
+        db.cursor.execute(query, tuple(params))
         resultados = db.cursor.fetchall()
         db.close()
         paquetes = []
@@ -369,3 +422,56 @@ class Tracking:
             }
             paquetes.append(paquete)
         return paquetes if paquetes else None
+    
+
+
+    @classmethod
+    def obtener_trackings_completos(cls, idTracking = None, buscador = ""):
+        db = Database()
+        query = """
+                select u.id as idUsuario, cedula ,primerNombre, segundoNombre, primerApellido, segundoApellido, telefono, 
+                provincia, ciudad, sector, calle_principal, calle_secundaria, referencia, numeracion,
+                numero_tracking, t.id, t.ruta_recibo
+                from trackings as t
+                LEFT JOIN direcciones as d on t.direccion_destino = d.id
+                INNER JOIN usuarios as u on u.id = t.usuario_id 
+                
+                """
+        params = []
+        if idTracking:
+            query += " WHERE t.id = %s"
+            params.append(idTracking)
+
+        # Si se proporciona un valor en 'buscador', lo agregamos al filtro
+        if buscador:
+            if params:  # Si ya tenemos parámetros (por ejemplo, idTracking), usamos 'AND'
+                query += " AND t.numero_tracking LIKE %s"
+            else:  # Si no hay parámetros previos, usamos 'WHERE'
+                query += " WHERE t.numero_tracking LIKE %s"
+            params.append(f"%{buscador}%")
+        db.cursor.execute(query, tuple(params))
+        resultados = db.cursor.fetchall()
+        db.close()
+        paquetes = []
+        for resultado in resultados:
+            paquete = {
+                "idUsuarios": resultado[0],         # Ajusta el índice según la estructura de tu tabla
+                "cedula": resultado[1],     # Ajusta el índice según la estructura de tu tabla
+                "primerNombre": resultado[2],   # Ajusta el índice según la estructura de tu tabla
+                "segundoNombre": resultado[3],
+                "primerApellido": resultado[4],
+                "segundoApellido": resultado[5],
+                "telefono": resultado[6],
+                "provincia": resultado[7],
+                "ciudad": resultado[8],
+                "sector": resultado[9],           
+                "calle_principal": resultado[10],  
+                "calle_secundaria": resultado[11],  
+                "referencia": resultado[12],  
+                "numeracion": resultado[13],  
+                "numero_tracking": resultado[14],  
+                "idTracking": resultado[15],
+                "rutaImagen": resultado[16]
+            }
+            paquetes.append(paquete)
+        return paquetes
