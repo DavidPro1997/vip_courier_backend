@@ -7,6 +7,7 @@ import os
 
 
 log_file_path = '/var/log/gunicorn/app.log'
+app = Flask(__name__)
 
 if os.name == 'posix':  # Ubuntu o cualquier sistema UNIX
     # Configuración para logs en la salida estándar y en un archivo
@@ -37,7 +38,6 @@ else:
     # Configuración para otros sistemas operativos si es necesario
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-app = Flask(__name__)
 
 # Configuración de CORS específica con encabezados y métodos permitidos
 CORS(app, resources={r"/*": {"origins": ["http://dev.vipcourier_v2.com","https://vipcourier.com.ec","http://vipcourier.com.ec"]}}, 
