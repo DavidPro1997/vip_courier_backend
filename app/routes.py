@@ -4,24 +4,38 @@ from flask_cors import CORS
 import logging
 import os
 
-# Verifica si el sistema operativo es Ubuntu y realiza una configuración específica
-if os.name == 'posix':  # Ubuntu o cualquier sistema UNIX
-    log_file_path = '/var/log/gunicorn/app.log'
 
+
+log_file_path = '/var/log/gunicorn/app.log'
+
+if os.name == 'posix':  # Ubuntu o cualquier sistema UNIX
+    # Configuración para logs en la salida estándar y en un archivo
+    handler = StreamHandler()  # Log en la salida estándar (stdout)
+    handler.setLevel(logging.INFO)  # O el nivel que necesites, como DEBUG
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))  # Formato de los logs
+
+    # Archivo de log
+    file_handler = FileHandler(log_file_path)  # Log en archivo
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+    # Agregar ambos handlers
+    app.logger.addHandler(handler)  # Para la salida estándar
+    app.logger.addHandler(file_handler)  # Para el archivo
+
+    # También configuramos el logging básico
     logging.basicConfig(
         level=logging.DEBUG,  # El nivel de log, puedes cambiarlo según lo necesites
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.StreamHandler(),  # Para mostrar los logs en la salida estándar
-            logging.FileHandler(log_file_path)  # Para guardarlos en un archivo
+            handler,  # Manejador para la salida estándar
+            file_handler  # Manejador para el archivo
         ]
     )
+
 else:
     # Configuración para otros sistemas operativos si es necesario
-    logging.basicConfig(level=logging.DEBUG)
-
-# Después puedes usarlo en cualquier parte de tu aplicación
-logging.info("Logger configurado correctamente.")
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 
