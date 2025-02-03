@@ -1,6 +1,27 @@
 from flask import Flask, request, jsonify
 from app.services import Usuario, Direccion, Paquete, Correo
 from flask_cors import CORS
+import logging
+import os
+
+# Verifica si el sistema operativo es Ubuntu y realiza una configuración específica
+if os.name == 'posix':  # Ubuntu o cualquier sistema UNIX
+    log_file_path = '/var/log/gunicorn/app.log'
+
+    logging.basicConfig(
+        level=logging.DEBUG,  # El nivel de log, puedes cambiarlo según lo necesites
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(),  # Para mostrar los logs en la salida estándar
+            logging.FileHandler(log_file_path)  # Para guardarlos en un archivo
+        ]
+    )
+else:
+    # Configuración para otros sistemas operativos si es necesario
+    logging.basicConfig(level=logging.DEBUG)
+
+# Después puedes usarlo en cualquier parte de tu aplicación
+logging.info("Logger configurado correctamente.")
 
 app = Flask(__name__)
 
