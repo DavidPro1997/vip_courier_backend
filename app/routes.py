@@ -2,8 +2,8 @@ from flask import Flask, request, jsonify
 from app.services import Usuario, Direccion, Paquete, Correo
 from flask_cors import CORS
 import logging
+from logging import StreamHandler, FileHandler
 import os
-
 
 
 log_file_path = '/var/log/gunicorn/app.log'
